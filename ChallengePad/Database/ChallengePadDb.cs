@@ -28,7 +28,19 @@ namespace ChallengePad.Database
 
         public async Task Migrate()
         {
-            await Context.Database.MigrateAsync();
+            while (true)
+            {
+                try
+                {
+                    await Context.Database.MigrateAsync();
+                    break;
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError($"{e.Message}\n{e.StackTrace}");
+                    await Task.Delay(1000);
+                }
+            }
         }
 
         public async Task CreateOperation(string name, CancellationToken token)

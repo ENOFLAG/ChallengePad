@@ -350,5 +350,7 @@ MigrationBackup/
 .ionide/
 
 # ChallengePad
-ChallengePad/Uploads
-ChallengePad/appsettings.Development.json
+/ChallengePad/Uploads
+/ChallengePad/appsettings.Development.json
+/docker-compose.yml
+/uploads

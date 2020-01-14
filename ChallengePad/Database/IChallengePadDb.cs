@@ -12,15 +12,14 @@ namespace ChallengePad.Database
 {
     static class IServiceCollectionExtension
     {
-        public static IServiceCollection AddChallengePadDb(this IServiceCollection services)
+        public static IServiceCollection AddChallengePadDb(this IServiceCollection services, ChallengePadSettings settings)
         {
             services
                 .AddScoped<IChallengePadDb, ChallengePadDb>()
                 .AddLogging()
                 .AddDbContextPool<ChallengePadDbContext>(options =>
                 {
-                    options.UseNpgsql(
-                        "Server=localhost;Port=5432;Database=EnoDatabase;User Id=docker;Password=docker;Timeout=15;SslMode=Disable;",
+                    options.UseNpgsql(settings.DbConnectionString,
                         pgoptions => pgoptions.EnableRetryOnFailure());
                 }, 90);
             return services;

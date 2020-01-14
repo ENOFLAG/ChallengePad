@@ -75,7 +75,7 @@ namespace ChallengePad
                         }
                     };
                 });
-            services.AddChallengePadDb();
+            services.AddChallengePadDb(challengePadSettings);
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddMvc();

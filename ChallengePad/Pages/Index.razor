@@ -18,7 +18,7 @@
     <select @onchange="@HandleOperationSelection">
         @foreach (var operation in Operations)
         {
-            <option value="@operation.Id">@operation.Name</option>
+            <option @key="@("operationlist" + operation.Id)" value="@operation.Id">@operation.Name</option>
         }
     </select>
     <button class="nav-item m-2" @onclick="@(() => CreateOperation = new CreateOperationModal())">Add Operation</button>
@@ -230,8 +230,9 @@
         using var scope = ScopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
         Operations = await db.GetOperations(0, 100, CancelSource.Token);
-        if (SelectedOperation?.Id == opId)
+        if (SelectedOperation == null || SelectedOperation.Id == opId)
             await HandleOperationSelection(opId);
+        base.StateHasChanged();
     }
 
     async Task HandleOperationSelection(ChangeEventArgs args)

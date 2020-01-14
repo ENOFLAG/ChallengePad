@@ -3,6 +3,7 @@ using ChallengePad.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,11 +16,13 @@ namespace ChallengePad.Database
     public class ChallengePadDb : IChallengePadDb
     {
         private readonly ILogger Logger;
+        private readonly IOptions<ChallengePadSettings> Settings;
         private readonly ChallengePadDbContext Context;
 
-        public ChallengePadDb(ChallengePadDbContext context, ILogger<ChallengePadDb> logger)
+        public ChallengePadDb(ChallengePadDbContext context, IOptions<ChallengePadSettings> settings, ILogger<ChallengePadDb> logger)
         {
             Context = context;
+            Settings = settings;
             Logger = logger;
         }
 
@@ -37,7 +40,7 @@ namespace ChallengePad.Database
             };
             Context.Operations.Add(newOp);
             await Context.SaveChangesAsync(token);
-            await OperationsChannel.Publish(newOp.Id);
+            await OperationsChannel.Publish(newOp.Id, Settings.Value.RedisConfiguration);
         }
 
         public async Task<Operation[]> GetOperations(int skip, int take, CancellationToken token)
@@ -73,7 +76,7 @@ namespace ChallengePad.Database
                     OperationId = operationId
                 });
             await Context.SaveChangesAsync(token);
-            await OperationsChannel.Publish(operationId);
+            await OperationsChannel.Publish(operationId, Settings.Value.RedisConfiguration);
         }
 
         public async Task UpdateObjective(long objectiveId, long operationId, bool solved, CancellationToken token)
@@ -83,7 +86,7 @@ namespace ChallengePad.Database
                 .SingleAsync(token);
             obj.Solved = solved;
             await Context.SaveChangesAsync(token);
-            await OperationsChannel.Publish(operationId);
+            await OperationsChannel.Publish(operationId, Settings.Value.RedisConfiguration);
         }
 
         public async Task AddFiles(ICollection<IFormFile> files, long id, bool isObjectiveFile, string username, CancellationToken token)
@@ -123,7 +126,7 @@ namespace ChallengePad.Database
                 using var stream = new FileStream(filePath, FileMode.Create);
                 await formFile.CopyToAsync(stream, token);
             }
-            await OperationsChannel.Publish(operationId);
+            await OperationsChannel.Publish(operationId, Settings.Value.RedisConfiguration);
         }
 
         public async Task<string> GetFileName(long id, CancellationToken token)

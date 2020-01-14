@@ -12,9 +12,9 @@ namespace ChallengePad.Channel
     {
         public static readonly string OPERATIONS_CHANNEL = "operations";
 
-        public static async IAsyncEnumerable<long> Subscribe([EnumeratorCancellation] CancellationToken cancelToken)
+        public static async IAsyncEnumerable<long> Subscribe([EnumeratorCancellation] CancellationToken cancelToken, string configuration)
         {
-            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost");
+            ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(configuration);
             var sub = redis.GetSubscriber();
             var queue = sub.Subscribe(OPERATIONS_CHANNEL);
             while (!cancelToken.IsCancellationRequested)
@@ -23,9 +23,9 @@ namespace ChallengePad.Channel
             }
         }
 
-        public static async Task Publish(long operationId)
+        public static async Task Publish(long operationId, string configuration)
         {
-            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost");
+            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(configuration);
             var sub = redis.GetSubscriber();
             await sub.PublishAsync(OPERATIONS_CHANNEL, operationId);
         }

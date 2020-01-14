@@ -8,6 +8,7 @@ namespace ChallengePad
     public class ChallengePadSettings
     {
         public string DbConnectionString { get; set; } = Environment.GetEnvironmentVariable("DATABASE") ?? "localhost; Port=5432;Database=ChallengePadDb;User Id = docker; Password=docker;Timeout=15;SslMode=Disable;";
+        public string RedisConfiguration { get; set; } = Environment.GetEnvironmentVariable("REDIS") ?? "localhost";
         public string Title { get; set; } = Environment.GetEnvironmentVariable("TITLE") ?? "ChallengePad";
         public string PadPrefix { get; set; } = Environment.GetEnvironmentVariable("PAD_PREFIX") ?? "https://demo.codimd.org/ChallengePad";
         public string PadSuffix { get; set; } = Environment.GetEnvironmentVariable("PAD_SUFFIX") ?? "";

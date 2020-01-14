@@ -192,10 +192,9 @@
         }
         var listener = Task.Run(async () =>
         {
-            var operationIdEnumerable = OperationsChannel.Subscribe(CancelSource.Token);
+            var operationIdEnumerable = OperationsChannel.Subscribe(CancelSource.Token, Settings.Value.RedisConfiguration);
             await foreach (var operationId in operationIdEnumerable)
             {
-                Console.WriteLine($"circuit {GetHashCode()} updating {operationId}");
                 await InvokeAsync(async () =>
                 {
                     await HandleOperationUpdate(operationId);

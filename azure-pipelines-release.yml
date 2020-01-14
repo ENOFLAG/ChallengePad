@@ -14,19 +14,15 @@ resources:
 variables:
   tag: '$(Build.BuildId)'
 
-stages:
-- stage: Build
-  displayName: Build image
-  jobs:  
-  - job: Build
-    displayName: Build
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-    - task: Docker@2
-      displayName: Build an image
-      inputs:
-        command: build
-        dockerfile: '$(Build.SourcesDirectory)/ChallengePad/Dockerfile'
-        tags: |
-          $(tag)
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- task: Docker@2
+  inputs:
+    containerRegistry: 'enoflagazure'
+    repository: 'ChallengePad'
+    command: 'buildAndPush'
+    Dockerfile: '$(Build.SourcesDirectory)/ChallengePad/Dockerfile'
+    buildContext: '$(Build.SourcesDirectory)/ChallengePad'
+    tags: '$(tag)'

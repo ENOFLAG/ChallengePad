@@ -18,6 +18,9 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+- powershell: $t = '$(Build.SourceBranch)'.Substring(10); echo "##vso[task.setvariable variable=value;isOutput=true]$t"
+  name: GetGithubTag
+
 - task: Docker@2
   inputs:
     containerRegistry: 'enoflagazure'
@@ -27,5 +30,5 @@ steps:
     buildContext: '$(Build.SourcesDirectory)/ChallengePad'
     tags: |
       latest
-      $(Build.BuildId)
+      $(GetGithubTag.value)
       az$(tag)

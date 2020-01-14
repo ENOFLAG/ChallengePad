@@ -25,4 +25,7 @@ steps:
     command: 'buildAndPush'
     Dockerfile: '$(Build.SourcesDirectory)/ChallengePad/Dockerfile'
     buildContext: '$(Build.SourcesDirectory)/ChallengePad'
-    tags: '$(tag)'
+    tags: |
+      latest
+      $(Build.BuildId)
+      az$(tag)

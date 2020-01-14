@@ -18,7 +18,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- powershell: $t = '$(Build.SourceBranch)'.Substring(10); echo "##vso[task.setvariable variable=value;isOutput=true]$t"
+- powershell: $t = '$(Build.SourceBranch)'.Substring(10).Replace('/',''); echo "##vso[task.setvariable variable=value;isOutput=true]$t"
   name: GetGithubTag
 
 - task: Docker@2

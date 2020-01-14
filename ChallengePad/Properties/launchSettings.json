@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "ChallengePad": {
+      "commandName": "Project",
+      "applicationUrl": "http://[::]:80",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

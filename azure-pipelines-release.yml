@@ -15,7 +15,7 @@ variables:
   tag: '$(Build.BuildId)'
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-latest'
 
 steps:
 - task: Docker@2

@@ -21,7 +21,7 @@ steps:
 - task: Docker@2
   inputs:
     containerRegistry: 'enoflagazure'
-    repository: 'ChallengePad'
+    repository: 'enoflag/challengepad'
     command: 'buildAndPush'
     Dockerfile: '$(Build.SourcesDirectory)/ChallengePad/Dockerfile'
     buildContext: '$(Build.SourcesDirectory)/ChallengePad'

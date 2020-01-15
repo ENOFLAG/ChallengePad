@@ -1,4 +1,4 @@
-# ChallengePad [![Build Status](https://dev.azure.com/ENOFLAG/ChallengePad/_apis/build/status/ENOFLAG.ChallengePad?branchName=master)](https://dev.azure.com/ENOFLAG/ChallengePad/_build/)
+# ChallengePad [![Build Status](https://dev.azure.com/ENOFLAG/ChallengePad/_apis/build/status/ENOFLAG.ChallengePad?branchName=master)](https://dev.azure.com/ENOFLAG/ChallengePad/_build/) ![](https://tokei.rs/b1/github/ENOFLAG/ChallengePad)
 
 
 ## Installation

@@ -21,3 +21,14 @@
     grid-column: 2;
     grid-row: 2;
 }
+
+.objective-table {
+    
+}
+
+div .custom-btn-container {
+    padding: 10px 0 0 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}

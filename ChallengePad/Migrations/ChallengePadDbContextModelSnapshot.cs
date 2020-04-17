@@ -43,6 +43,9 @@ namespace ChallengePad.Migrations
                     b.Property<bool>("Solved")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("Visible")
+                        .HasColumnType("boolean");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OperationId");
@@ -60,6 +63,9 @@ namespace ChallengePad.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("Visible")
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 

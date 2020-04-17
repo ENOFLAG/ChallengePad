@@ -85,8 +85,19 @@ namespace ChallengePad.Database
                     Name = name,
                     Category = category,
                     Points = points,
-                    OperationId = operationId
+                    OperationId = operationId,
+                    Visible = true
                 });
+            await Context.SaveChangesAsync(token);
+            await OperationsChannel.Publish(operationId, Settings.Value.RedisConfiguration);
+        }
+
+        public async Task UpdateObjectiveVisiblity(long objectiveId, long operationId, bool visible, CancellationToken token)
+        {
+            var obj = await Context.Objectives
+                .Where(obj => obj.Id == objectiveId)
+                .SingleAsync(token);
+            obj.Visible = visible;
             await Context.SaveChangesAsync(token);
             await OperationsChannel.Publish(operationId, Settings.Value.RedisConfiguration);
         }

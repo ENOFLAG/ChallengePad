@@ -6,6 +6,7 @@
 @using ChallengePad.ViewModels
 @using System.Threading
 @using System.Globalization
+@using System.Diagnostics;
 @using Microsoft.Extensions.DependencyInjection
 @using Microsoft.Extensions.Options
 @inject IServiceScopeFactory ScopeFactory
@@ -40,7 +41,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="@(() => CreateOperation = null)">Close</button>
-                    <button type="button" class="btn btn-primary" @onclick="@(async () => await HandleCreateOperation(CreateOperation))">Create</button>
+                    <button type="button" class="btn btn-primary" @onclick="@(() => HandleCreateOperation(CreateOperation))">Create</button>
                 </div>
             </div>
         </div>
@@ -65,7 +66,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="@(() => CreateObjective = null)">Close</button>
-                    <button type="button" class="btn btn-primary" @onclick="@(async () => await HandleCreateObjective(CreateObjective))">Create</button>
+                    <button type="button" class="btn btn-primary" @onclick="@(() => HandleCreateObjective(CreateObjective))">Create</button>
                 </div>
             </div>
         </div>
@@ -80,42 +81,47 @@
                 <a href="" @onclick="@(() => HandleOperationClick())">@SelectedOperation.Name</a>
             </div>
             <div class="progress m-2">
-                <div class="progress-bar" role="progressbar" style="width: @((SelectedOperation.SolvedObjectives*100.0/SelectedOperation.TotalObjectives).ToString(CultureInfo.InvariantCulture))%">@SelectedOperation.SolvedObjectives / @SelectedOperation.TotalObjectives</div>
+                <div class="progress-bar" role="progressbar" style="width: @((SelectedOperation.SolvedObjectives(ShowHidden)*100.0/SelectedOperation.TotalObjectives(ShowHidden)).ToString(CultureInfo.InvariantCulture))%">@SelectedOperation.SolvedObjectives(ShowHidden) / @SelectedOperation.TotalObjectives(ShowHidden)</div>
             </div>
             <div class="progress m-2">
-                <div class="progress-bar" role="progressbar" style="width: @((SelectedOperation.SolvedPoints*100.0/SelectedOperation.TotalPoints).ToString(CultureInfo.InvariantCulture))%">@SelectedOperation.SolvedPoints / @SelectedOperation.TotalPoints</div>
+                <div class="progress-bar" role="progressbar" style="width: @((SelectedOperation.SolvedPoints(ShowHidden)*100.0/SelectedOperation.TotalPoints(ShowHidden)).ToString(CultureInfo.InvariantCulture))%">@SelectedOperation.SolvedPoints(ShowHidden) / @SelectedOperation.TotalPoints(ShowHidden)</div>
             </div>
         </div>
 
         <div class="card mt-4 p-2">
-            <table>
+            <table class="objective-table">
                 @foreach (var category in SelectedOperation.Categories)
                 {
-                    <tr>
-                        <td colspan="5"><strong>@category.Name [<span class="done-count">@category.SolvedObjectives</span>/@category.TotalObjectives]</strong></td>
-                    </tr>
-                    @foreach (var objective in category.Objectives)
+                    @if (category.Objectives.Where(obj => obj.Visible || ShowHidden).Count() > 0)   // Category not empty due to filter
                     {
-                        <tr class="objective done highlightable">
-                            <td class="padded">
-                                <input @key="@("box" + objective.Id)" type="checkbox" checked="@objective.Solved" @onchange=@(async eventArgs => { objective.Solved = (bool)eventArgs.Value; await HandleObjectiveSolvedChanged(objective); }) />
-                            </td>
-                            <td class="padded" width="100%">
-                                <a href="" @key="@("link" + objective.Id)" @onclick="@(() => HandleObjectiveClick(objective))" class="contentlink">[@objective.Points] @objective.Name</a>
-                            </td>
-                            <td class="padded" nowrap>
-                                <a href="" @key="@("files" + objective.Id)" class="contentlink" @onclick="@(() => HandleFileListSelection(objective))"><i class="fa fa-folder"></i></a>
-                                <sup>@objective.Files.Count</sup>
-                            </td>
+                        <tr>
+                            <td colspan="5"><strong>@category.Name [<span class="done-count">@category.SolvedObjectives(ShowHidden)</span>/@category.TotalObjectives(ShowHidden)]</strong></td>
                         </tr>
+                        @foreach (var objective in category.Objectives.Where(obj => obj.Visible || ShowHidden))
+                        {
+                            <tr @key="@("objrow" + objective?.Id)" class="objective done highlightable">
+                                <td class="padded">
+                                    <input @key="@("box" + objective?.Id)" type="checkbox" checked="@objective?.Solved" @onchange=@(async eventArgs => { objective.Solved = (bool)eventArgs.Value; await HandleObjectiveSolvedChanged(objective); }) />
+                                </td>
+                                <td class="padded" width="100%">
+                                    <a href="" @key="@("link" + objective?.Id)" @onclick="@(() => HandleObjectiveClick(objective))" class="contentlink">[@objective?.Points] @objective?.Name</a>
+                                </td>
+                                <td class="padded" nowrap>
+                                    <a href="" @key="@("hide" + objective.Id)" class="contentlink" @onclick="@(async () => await ToggleObjectiveVisibility(objective))"><i class="@(objective.Visible ? "fa fa-eye-slash" : "fa fa-eye")"></i></a>
+                                </td>
+                                <td class="padded" nowrap>
+                                    <a href="" @key="@("files" + objective.Id)" class="contentlink" @onclick="@(() => HandleFileListSelection(objective))"><i class="fa fa-folder"></i></a>
+                                    <sup>@objective.Files.Count</sup>
+                                </td>
+                            </tr>
+                        }
                     }
                 }
-                <tr>
-                    <td colspan="5">
-                        <button type="button" class="btn btn-mini" @onclick="@(async () => CreateObjective = new CreateObjectiveModal(SelectedOperation.Id))">Add</button>
-                    </td>
-                </tr>
             </table>
+            <div class="custom-btn-container">
+                <button type="button" class="btn btn-outline-primary" @onclick="@(async () => CreateObjective = new CreateObjectiveModal(SelectedOperation.Id))">Add</button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="@(() => ToggleHidden())">@(ShowHidden ? "Hide Elements": "Show Hidden")</button>
+            </div>
         </div>
     </div>
     <div id="content">
@@ -166,6 +172,7 @@
 }
 
 @code {
+    bool ShowHidden = false;
     Operation[] Operations = new Operation[0];
     Operation? SelectedOperation = null;
     Objective? SelectedObjective = null;
@@ -187,77 +194,88 @@
         Operations = await db.GetOperations(0, 100, CancelSource.Token);
         if (Operations.Length > 0)
         {
-            SelectedOperation = Operations[0];
-            await HandleOperationSelection(Operations[0].Id);
+            var operation = await db.GetOperation(Operations[0].Id, CancelSource.Token);
+            ApplyUpdate(operation, true);
         }
         var listener = Task.Run(async () =>
         {
             var operationIdEnumerable = OperationsChannel.Subscribe(CancelSource.Token, Settings.Value.RedisConfiguration);
             await foreach (var operationId in operationIdEnumerable)
-            {
+            {                                                           // An operation has changed in the backend!
+                var scopedId = operationId;                             // foreach loop counters are by ref, not val
                 await InvokeAsync(async () =>
                 {
-                    await HandleOperationUpdate(operationId);
+                    using var scope = ScopeFactory.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
+                    Operations = await db.GetOperations(0, 100, CancelSource.Token);
+                    var operation = await db.GetOperation(scopedId, CancelSource.Token);
+                    ApplyUpdate(operation, false);
+                    base.StateHasChanged();
                 });
             }
         });
     }
 
-    async Task HandleCreateObjective(CreateObjectiveModal modal)
+    void HandleCreateObjective(CreateObjectiveModal modal)
     {
         if (modal.Name != null && modal.Name != "" && modal.Category != null && modal.Category != "")
         {
             CreateObjective = null;
-            using var scope = ScopeFactory.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
-            await db.CreateObjective(modal.Name, modal.Category, modal.Points, modal.OperationId, CancelSource.Token);
+            Task.Run(async () =>
+            {
+                using var scope = ScopeFactory.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
+                await db.CreateObjective(modal.Name, modal.Category, modal.Points, modal.OperationId, CancelSource.Token);
+            });
         }
     }
 
-    async Task HandleCreateOperation(CreateOperationModal modal)
+    void HandleCreateOperation(CreateOperationModal modal)
     {
         if (modal.Name != null && modal.Name != "")
         {
             CreateOperation = null;
-            using var scope = ScopeFactory.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
-            await db.CreateOperation(modal.Name, CancelSource.Token);
+            Task.Run(async () =>
+            {
+                using var scope = ScopeFactory.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
+                await db.CreateOperation(modal.Name, CancelSource.Token);
+            });
         }
-    }
-
-    async Task HandleOperationUpdate(long opId)
-    {
-        using var scope = ScopeFactory.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
-        Operations = await db.GetOperations(0, 100, CancelSource.Token);
-        if (SelectedOperation == null || SelectedOperation.Id == opId)
-            await HandleOperationSelection(opId);
-        base.StateHasChanged();
     }
 
     async Task HandleOperationSelection(ChangeEventArgs args)
     {
-        await HandleOperationSelection(long.Parse(args.Value.ToString() ?? ""));
-    }
-
-    async Task HandleOperationSelection(long id)
-    {
+        var operationId = long.Parse(args.Value.ToString() ?? "");
         using var scope = ScopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
-        SelectedOperation = await db.GetOperation(id, CancelSource.Token);
-        if (SelectedObjective != null)
+        var operation = await db.GetOperation(operationId, CancelSource.Token);
+        ApplyUpdate(operation, true);
+    }
+
+    void ApplyUpdate(Operation updatedOperation, bool force = false)
+    {
+        if (SelectedOperation?.Id == updatedOperation.Id || force)
         {
-            SelectedObjective = SelectedOperation.Objectives.Single(o => o.Id == SelectedObjective.Id);
-        }
-        if (SelectedFileList != null)
-        {
-            if (SelectedObjective != null)
+            SelectedOperation = updatedOperation;
+            if (SelectedObjective?.OperationId == SelectedOperation.Id)
             {
-                SelectedFileList = SelectedObjective.Files;
+                SelectedObjective = updatedOperation.Objectives.Where(obj => obj.Id == SelectedObjective.Id).Single();
             }
             else
             {
-                SelectedFileList = SelectedOperation.Files;
+                SelectedObjective = null;
+            }
+            if (SelectedFileList != null)
+            {
+                if (SelectedObjective != null)
+                {
+                    SelectedFileList = SelectedObjective.Files;
+                }
+                else
+                {
+                    SelectedFileList = updatedOperation.Files;
+                }
             }
         }
         base.StateHasChanged();
@@ -286,5 +304,18 @@
     {
         SelectedObjective = obj;
         SelectedFileList = obj.Files;
+    }
+
+    async Task ToggleObjectiveVisibility(Objective obj)
+    {
+        using var scope = ScopeFactory.CreateScope();
+        obj.Visible = !obj.Visible;
+        var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
+        await db.UpdateObjectiveVisiblity(obj.Id, obj.OperationId, obj.Visible, CancelSource.Token);
+    }
+
+    void ToggleHidden()
+    {
+        ShowHidden = !ShowHidden;
     }
 }

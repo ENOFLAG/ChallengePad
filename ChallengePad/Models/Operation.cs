@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -12,6 +13,8 @@ namespace ChallengePad.Models
 #pragma warning disable CS8618
         public long Id { get; set; }
         public string Name { get; set; }
+        [DefaultValue(true)]
+        public bool Visible { get; set; }
         public List<Objective> Objectives { get; set; } = new List<Objective>();
         public List<UploadedFile> Files { get; set; } = new List<UploadedFile>();
 #pragma warning restore CS8618
@@ -30,10 +33,10 @@ namespace ChallengePad.Models
                     return category;
                 }));
 
-        [NotMapped] public long SolvedObjectives => Objectives.Sum(o => o.Solved ? 1 : 0);
-        [NotMapped] public long SolvedPoints => Objectives.Sum(o => o.Solved ? o.Points : 0);
-        [NotMapped] public long TotalPoints => Objectives.Sum(o => o.Points);
-        [NotMapped] public long TotalObjectives => Objectives.Count;
+        public long SolvedObjectives(bool countHidden) => Objectives.Where(o => o.Visible || countHidden).Sum(o => o.Solved ? 1 : 0);
+        public long SolvedPoints(bool countHidden) => Objectives.Where(o => o.Visible || countHidden).Sum(o => o.Solved ? o.Points : 0);
+        public long TotalPoints(bool countHidden) => Objectives.Where(o => o.Visible || countHidden).Sum(o => o.Points);
+        public long TotalObjectives(bool countHidden) => Objectives.Where(o => o.Visible || countHidden).Count();
     }
 
     public class Category
@@ -41,8 +44,8 @@ namespace ChallengePad.Models
 #pragma warning disable CS8618
         public string Name { get; set; }
         public List<Objective> Objectives { get; set; } = new List<Objective>();
-        public long SolvedObjectives => Objectives.Sum(o => o.Solved ? 1 : 0);
-        public long TotalObjectives => Objectives.Count;
+        public long SolvedObjectives(bool countHidden) => Objectives.Where(o => o.Visible || countHidden).Sum(o => o.Solved ? 1 : 0);
+        public long TotalObjectives(bool countHidden) => Objectives.Where(o => o.Visible || countHidden).Count();
 #pragma warning restore CS8618
     }
 }

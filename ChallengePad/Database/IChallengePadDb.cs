@@ -34,6 +34,7 @@ namespace ChallengePad.Database
         Task<Operation> GetOperation(long id, CancellationToken token);
         Task CreateObjective(string name, string category, long points, long operationId, CancellationToken token);
         Task UpdateObjective(long objectiveId, long operationId, bool solved, CancellationToken token);
+        Task UpdateObjectiveVisiblity(long objectiveId, long operationId, bool visible, CancellationToken token);
         Task AddFiles(ICollection<IFormFile> files, long id, bool isObjectiveFile, string username, CancellationToken token);
         Task<string> GetFileName(long id, CancellationToken token);
     }

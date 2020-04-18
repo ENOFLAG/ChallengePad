@@ -10,160 +10,173 @@
 @using Microsoft.Extensions.Options
 @inject IServiceScopeFactory ScopeFactory
 @inject IOptions<ChallengePadSettings> Settings
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
 @implements IDisposable
 
-<nav id="header">
-    <span class="navbar-brand">@Settings.Value.Title</span>
-    <div class="ml-auto"></div>
-    <select @onchange="@HandleOperationSelection">
-        @foreach (var operation in Operations)
-        {
-            <option @key="@("operationlist" + operation.Id)" value="@operation.Id">@operation.Name</option>
-        }
-    </select>
-    <button class="nav-item m-2" @onclick="@(() => CreateOperation = new CreateOperationModal())">Add Operation</button>
-</nav>
-
-@if (CreateOperation != null)
-{
-    <div class="modal" tabindex="-1" role="dialog" style="display: block">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Create Operation</h5>
-                    <button type="button" class="close" @onclick="@(() => CreateOperation = null)" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <input class="form-control" type="text" placeholder="ENOWARS" @bind="@CreateOperation.Name" />
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="@(() => CreateOperation = null)">Close</button>
-                    <button type="button" class="btn btn-primary" @onclick="@(async () => await HandleCreateOperation(CreateOperation))">Create</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-@if (CreateObjective != null)
-{
-    <div class="modal" tabindex="-1" role="dialog" style="display: block">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Create Objective</h5>
-                    <button type="button" class="close" @onclick="@(() => CreateObjective = null)" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <input class="form-control" type="text" placeholder="ScavengePad" @bind="@CreateObjective.Name" />
-                    <input class="form-control" type="text" placeholder="web" @bind="@CreateObjective.Category" />
-                    <input class="form-control" type="number" placeholder="10" @bind="@CreateObjective.Points" />
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="@(() => CreateObjective = null)">Close</button>
-                    <button type="button" class="btn btn-primary" @onclick="@(async () => await HandleCreateObjective(CreateObjective))">Create</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-@if (SelectedOperation != null)
-{
-    <div id="card">
-        <div class="card p-2">
-            <div class="highlightable">
-                <a href="" @onclick="@(() => HandleOperationClick())">@SelectedOperation.Name</a>
-            </div>
-            <div class="progress m-2">
-                <div class="progress-bar" role="progressbar" style="width: @((SelectedOperation.SolvedObjectives*100.0/SelectedOperation.TotalObjectives).ToString(CultureInfo.InvariantCulture))%">@SelectedOperation.SolvedObjectives / @SelectedOperation.TotalObjectives</div>
-            </div>
-            <div class="progress m-2">
-                <div class="progress-bar" role="progressbar" style="width: @((SelectedOperation.SolvedPoints*100.0/SelectedOperation.TotalPoints).ToString(CultureInfo.InvariantCulture))%">@SelectedOperation.SolvedPoints / @SelectedOperation.TotalPoints</div>
-            </div>
-        </div>
-
-        <div class="card mt-4 p-2">
-            <table>
-                @foreach (var category in SelectedOperation.Categories)
+<AuthorizeView>
+    <Authorized>
+        <nav id="header">
+            <span class="navbar-brand">@Settings.Value.Title</span>
+            <div class="ml-auto"></div>
+            <select @onchange="@HandleOperationSelection">
+                @foreach (var operation in Operations)
                 {
-                    <tr>
-                        <td colspan="5"><strong>@category.Name [<span class="done-count">@category.SolvedObjectives</span>/@category.TotalObjectives]</strong></td>
-                    </tr>
-                    @foreach (var objective in category.Objectives)
-                    {
-                        <tr class="objective done highlightable">
-                            <td class="padded">
-                                <input @key="@("box" + objective.Id)" type="checkbox" checked="@objective.Solved" @onchange=@(async eventArgs => { objective.Solved = (bool)eventArgs.Value; await HandleObjectiveSolvedChanged(objective); }) />
-                            </td>
-                            <td class="padded" width="100%">
-                                <a href="" @key="@("link" + objective.Id)" @onclick="@(() => HandleObjectiveClick(objective))" class="contentlink">[@objective.Points] @objective.Name</a>
-                            </td>
-                            <td class="padded" nowrap>
-                                <a href="" @key="@("files" + objective.Id)" class="contentlink" @onclick="@(() => HandleFileListSelection(objective))"><i class="fa fa-folder"></i></a>
-                                <sup>@objective.Files.Count</sup>
-                            </td>
-                        </tr>
-                    }
+                    <option @key="@("operationlist" + operation.Id)" value="@operation.Id">@operation.Name</option>
                 }
-                <tr>
-                    <td colspan="5">
-                        <button type="button" class="btn btn-mini" @onclick="@(async () => CreateObjective = new CreateObjectiveModal(SelectedOperation.Id))">Add</button>
-                    </td>
-                </tr>
-            </table>
-        </div>
-    </div>
-    <div id="content">
-        @if (SelectedObjective != null && SelectedFileList == null)
+            </select>
+            <button class="nav-item m-2" @onclick="@(() => CreateOperation = new CreateOperationModal())">Add Operation</button>
+        </nav>
+
+        @if (CreateOperation != null)
         {
-            <iframe class="card" style="width:100%; height:100%; border:0; border-style:solid;" src="@(Settings.Value.PadPrefix + "PAD_OBJECTIVE" + SelectedObjective.Id + Settings.Value.PadSuffix)" />
+            <div class="modal" tabindex="-1" role="dialog" style="display: block">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create Operation</h5>
+                            <button type="button" class="close" @onclick="@(() => CreateOperation = null)" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <input class="form-control" type="text" placeholder="ENOWARS" @bind="@CreateOperation.Name" />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="@(() => CreateOperation = null)">Close</button>
+                            <button type="button" class="btn btn-primary" @onclick="@(async () => await HandleCreateOperation(CreateOperation))">Create</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
-        else if (SelectedFileList == null)
+
+        @if (CreateObjective != null)
         {
-            <iframe class="card" style="width:100%; height:100%; border:0; border-style:solid;" src="@(Settings.Value.PadPrefix + "PAD_OPERATION" + SelectedOperation.Id + Settings.Value.PadSuffix)" />
+            <div class="modal" tabindex="-1" role="dialog" style="display: block">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create Objective</h5>
+                            <button type="button" class="close" @onclick="@(() => CreateObjective = null)" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <input class="form-control" type="text" placeholder="ScavengePad" @bind="@CreateObjective.Name" />
+                            <input class="form-control" type="text" placeholder="web" @bind="@CreateObjective.Category" />
+                            <input class="form-control" type="number" placeholder="10" @bind="@CreateObjective.Points" />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="@(() => CreateObjective = null)">Close</button>
+                            <button type="button" class="btn btn-primary" @onclick="@(async () => await HandleCreateObjective(CreateObjective))">Create</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
-        else
+
+        @if (SelectedOperation != null)
         {
-            <table class="table table-striped">
-                <tbody>
-                    <tr>
-                        <th>Name</th>
-                        <th>Author</th>
-                        <th>Uploaded</th>
-                    </tr>
-                    @foreach (var file in SelectedFileList)
-                    {
-                        <tr @key="@("filelistitem" + file.Id)">
-                            <td><a href="/api/files?id=@(file.Id)" download target="_blank">@(file.Filename)</a></td>
-                            <td>@file.Username</td>
-                            <td><abbr class="timeago" title="uploaded">@file.Timestamp</abbr></td>
+            <div id="card">
+                <div class="card p-2">
+                    <div class="highlightable">
+                        <a href="" @onclick="@(() => HandleOperationClick())">@SelectedOperation.Name</a>
+                    </div>
+                    <div class="progress m-2">
+                        <div class="progress-bar" role="progressbar" style="width: @((SelectedOperation.SolvedObjectives*100.0/SelectedOperation.TotalObjectives).ToString(CultureInfo.InvariantCulture))%">@SelectedOperation.SolvedObjectives / @SelectedOperation.TotalObjectives</div>
+                    </div>
+                    <div class="progress m-2">
+                        <div class="progress-bar" role="progressbar" style="width: @((SelectedOperation.SolvedPoints*100.0/SelectedOperation.TotalPoints).ToString(CultureInfo.InvariantCulture))%">@SelectedOperation.SolvedPoints / @SelectedOperation.TotalPoints</div>
+                    </div>
+                </div>
+
+                <div class="card mt-4 p-2">
+                    <table>
+                        @foreach (var category in SelectedOperation.Categories)
+                        {
+                            <tr>
+                                <td colspan="5"><strong>@category.Name [<span class="done-count">@category.SolvedObjectives</span>/@category.TotalObjectives]</strong></td>
+                            </tr>
+                            @foreach (var objective in category.Objectives)
+                            {
+                                <tr class="objective done highlightable">
+                                    <td class="padded">
+                                        <input @key="@("box" + objective.Id)" type="checkbox" checked="@objective.Solved" @onchange=@(async eventArgs => { objective.Solved = (bool)eventArgs.Value; await HandleObjectiveSolvedChanged(objective); }) />
+                                    </td>
+                                    <td class="padded" width="100%">
+                                        <a href="" @key="@("link" + objective.Id)" @onclick="@(() => HandleObjectiveClick(objective))" class="contentlink">[@objective.Points] @objective.Name</a>
+                                    </td>
+                                    <td class="padded" nowrap>
+                                        <a href="" @key="@("files" + objective.Id)" class="contentlink" @onclick="@(() => HandleFileListSelection(objective))"><i class="fa fa-folder"></i></a>
+                                        <sup>@objective.Files.Count</sup>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        <tr>
+                            <td colspan="5">
+                                <button type="button" class="btn btn-mini" @onclick="@(async () => CreateObjective = new CreateObjectiveModal(SelectedOperation.Id))">Add</button>
+                            </td>
                         </tr>
-                    }
-                </tbody>
-            </table>
-            <iframe name="hidden-iframe" style="display: none;"></iframe>
-            <form id="formId" action="/api/files" enctype="multipart/form-data" method="post" target="hidden-iframe">
-                @if (SelectedObjective != null)
+                    </table>
+                </div>
+            </div>
+            <div id="content">
+                @if (SelectedObjective != null && SelectedFileList == null)
                 {
-                    <input type="hidden" name="id" @bind="@SelectedObjective.Id" />
-                    <input type="hidden" name="isObjectiveFile" value="true" />
+                    <iframe class="card" style="width:100%; height:100%; border:0; border-style:solid;" src="@(Settings.Value.PadPrefix + "PAD_OBJECTIVE" + SelectedObjective.Id + Settings.Value.PadSuffix)" />
+                }
+                else if (SelectedFileList == null)
+                {
+                    <iframe class="card" style="width:100%; height:100%; border:0; border-style:solid;" src="@(Settings.Value.PadPrefix + "PAD_OPERATION" + SelectedOperation.Id + Settings.Value.PadSuffix)" />
                 }
                 else
                 {
-                    <input type="hidden" name="id" @bind="@SelectedOperation.Id" />
-                    <input type="hidden" name="isObjectiveFile" value="false" />
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th>Name</th>
+                                <th>Author</th>
+                                <th>Uploaded</th>
+                            </tr>
+                            @foreach (var file in SelectedFileList)
+                            {
+                                <tr @key="@("filelistitem" + file.Id)">
+                                    <td><a href="/api/files?id=@(file.Id)" download target="_blank">@(file.Filename)</a></td>
+                                    <td>@file.Username</td>
+                                    <td><abbr class="timeago" title="uploaded">@file.Timestamp</abbr></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <iframe name="hidden-iframe" style="display: none;"></iframe>
+                    <form id="formId" action="/api/files" enctype="multipart/form-data" method="post" target="hidden-iframe">
+                        @if (SelectedObjective != null)
+                        {
+                            <input type="hidden" name="id" @bind="@SelectedObjective.Id" />
+                            <input type="hidden" name="isObjectiveFile" value="true" />
+                        }
+                        else
+                        {
+                            <input type="hidden" name="id" @bind="@SelectedOperation.Id" />
+                            <input type="hidden" name="isObjectiveFile" value="false" />
+                        }
+                        <input type="file" name="files" multiple="multiple" @bind="@Files"><br>
+                        <input type="submit" value="Upload" @onclick="foo => { Files = null; }">
+                    </form>
                 }
-                <input type="file" name="files" multiple="multiple" @bind="@Files"><br>
-                <input type="submit" value="Upload" @onclick="foo => { Files = null; }">
-            </form>
+            </div>
         }
-    </div>
-}
+    </Authorized>
+    <NotAuthorized>
+        <h1>Authentication Failure!</h1>
+        <p>You're not signed in.</p>
+        <button @onclick="a => OAuth2()">oauth2</button>
+    </NotAuthorized>
+</AuthorizeView>
+
+
 
 @code {
     Operation[] Operations = new Operation[0];
@@ -174,6 +187,11 @@
     CreateOperationModal? CreateOperation = null;
     CreateObjectiveModal? CreateObjective = null;
     CancellationTokenSource CancelSource = new CancellationTokenSource();
+
+    public void OAuth2()
+    {
+        Navigation.NavigateTo("/api/OAuth2", true);
+    }
 
     public void Dispose()
     {

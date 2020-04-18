@@ -1,0 +1,24 @@
+﻿@page
+@namespace ChallengePad.Pages
+@model ChallengePad.Pages.LoginModel
+@using Microsoft.Extensions.Options
+
+@inject IOptions<ChallengePadSettings> Settings
+
+<html>
+<body>
+    @if (Settings.Value.UseOAuth)
+    {
+        <button>Login with OAauth</button>
+        <br />
+    }
+    @if (Settings.Value.UseGuestPSK)
+    {
+        <input type="text" placeholder="verysecurestring" />
+        <button>Login with Guest PSK</button>
+        <br />
+    }
+</body>
+</html>
+@{
+}

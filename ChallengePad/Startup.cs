@@ -46,13 +46,11 @@ namespace ChallengePad
                 options.KnownProxies.Clear();
             });
             services.AddAuthorization();
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = "OAuth";
-            })
-                .AddCookie()
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/Login";
+                })
                 .AddOAuth("OAuth", options =>
                 {
                     options.ClientId = challengePadSettings.OAuthClientId;

@@ -10,12 +10,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace ChallengePad.Controllers
 {
     [Route("api/[controller]")]
-    public class AccountController : Controller
+    public class OAuth2Controller : Controller
     {
         [HttpGet]
         public IActionResult Get()
         {
-            return Challenge(new AuthenticationProperties() { RedirectUri = "/" });
+            return Challenge(new AuthenticationProperties() { RedirectUri = "/" }, new string[] { "OAuth"});
         }
     }
 }

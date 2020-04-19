@@ -98,14 +98,6 @@
         base.StateHasChanged();
     }
 
-    async Task ToggleObjectiveVisibility(Objective obj)
-    {
-        using var scope = ScopeFactory.CreateScope();
-        obj.Visible = !obj.Visible;
-        var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
-        await db.UpdateObjectiveVisiblity(obj.Id, obj.OperationId, obj.Visible, CancelSource.Token);
-    }
-
     void ToggleHidden()
     {
         ShowHidden = !ShowHidden;

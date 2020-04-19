@@ -1,10 +1,12 @@
 ﻿@page "/o/{OperationName}"
 @page "/o/{OperationName}/{ObjectiveName}"
+@page "/o/{OperationName}/{ObjectiveName}/{ActionName}"
 
 @using System.Threading
 @using System.Globalization
 @using System.Diagnostics;
 @using Microsoft.Extensions.DependencyInjection
+@using Microsoft.Extensions.Logging
 @using Microsoft.Extensions.Options
 @using ChallengePad.Channel
 @using ChallengePad.Models
@@ -14,9 +16,9 @@
 @inject IServiceScopeFactory ScopeFactory
 @inject IOptions<ChallengePadSettings> Settings
 @inject SubscriptionManager SubManager
+@inject ILogger<OperationPage> Logger
+@inject NavigationManager NavigationManager
 @implements IDisposable
-
-<h3>OperationPage</h3>
 
 @if (CreateObjective != null)
 {
@@ -77,10 +79,10 @@
                                     <a href="/o/@SelectedOperation.Name/@objective.Name" @key="@("link" + objective?.Id)" class="contentlink">[@objective?.Points] @objective?.Name</a>
                                 </td>
                                 <td class="padded" nowrap>
-                                    <!--<a href="" @key="@("hide" + objective.Id)" class="contentlink" @onclick="@(async () => await ToggleObjectiveVisibility(objective))"><i class="@(objective.Visible ? "fa fa-eye-slash" : "fa fa-eye")"></i></a>-->
+                                    <a @key="@("hide" + objective.Id)" class="contentlink" @onclick="@(async () => await ToggleObjectiveVisibility(objective))"><i class="@(objective.Visible ? "fa fa-eye-slash" : "fa fa-eye")"></i></a>
                                 </td>
                                 <td class="padded" nowrap>
-                                    <!--<a href="" @key="@("files" + objective.Id)" class="contentlink" @onclick="@(() => HandleFileListSelection(objective))"><i class="fa fa-folder"></i></a>-->
+                                    <a href="/o/@SelectedOperation.Name/@objective.Name/files" @key="@("files" + objective.Id)" class="contentlink"><i class="fa fa-folder"></i></a>
                                     <sup>@objective.Files.Count</sup>
                                 </td>
                             </tr>
@@ -143,28 +145,13 @@
 
 @code {
     CancellationTokenSource CancelSource = new CancellationTokenSource();
-    string? _OperationName;
     [Parameter]
-    public string? OperationName
-    {
-        get => _OperationName;
-        set
-        {
-            _OperationName = value;
-            ScheduleUpdate();
-        }
-    }
-    string? _ObjectiveName;
+    public string? OperationName { get; set; }
     [Parameter]
-    public string? ObjectiveName
-    {
-        get => _ObjectiveName;
-        set
-        {
-            _ObjectiveName = value;
-            ScheduleUpdate();
-        }
-    }
+    public string? ObjectiveName { get; set; }
+    [Parameter]
+    public string? ActionName { get; set; }
+
     bool ShowHidden = false;
     CreateObjectiveModal? CreateObjective = null;
     Operation? SelectedOperation = null;
@@ -174,6 +161,7 @@
 
     protected override void OnInitialized()
     {
+        Logger.LogWarning("OnInitialized");
         var subTask = SubManager.Subscribe(CancelSource.Token, (id) =>
         {
             if (id == SelectedOperation?.Id)
@@ -186,6 +174,12 @@
     public void Dispose()
     {
         CancelSource.Cancel();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Logger.LogWarning($"OnParametersSet {OperationName} {ObjectiveName}");
+        ScheduleUpdate();
     }
 
     void HandleCreateObjective(CreateObjectiveModal modal)
@@ -207,6 +201,14 @@
         using var scope = ScopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
         await db.UpdateObjective(obj.Id, obj.OperationId, obj.Solved, CancelSource.Token);
+    }
+
+    async Task ToggleObjectiveVisibility(Objective obj)
+    {
+        using var scope = ScopeFactory.CreateScope();
+        obj.Visible = !obj.Visible;
+        var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
+        await db.UpdateObjectiveVisiblity(obj.Id, obj.OperationId, obj.Visible, CancelSource.Token);
     }
 
     void ToggleHidden()
@@ -234,8 +236,17 @@
 
     void Update(Operation? selectedOperation, Objective? selectedObjective)
     {
+        Logger.LogWarning($"Update({selectedOperation?.Id}, {selectedObjective?.Id})");
         SelectedOperation = selectedOperation;
         SelectedObjective = selectedObjective;
+        if (SelectedObjective != null && ActionName == "files")
+        {
+            SelectedFileList = SelectedObjective.Files;
+        }
+        else
+        {
+            SelectedFileList = null;
+        }
         base.StateHasChanged();
     }
 }

@@ -38,7 +38,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="@(() => CreateObjective = null)">Close</button>
-                    <button type="button" class="btn btn-primary" @onclick="@(() => HandleCreateObjective(CreateObjective))">Create</button>
+                    <button type="button" class="btn btn-primary" @onclick="@(() => HandleObjectiveCreation(CreateObjective))">Create</button>
                 </div>
             </div>
         </div>
@@ -73,13 +73,13 @@
                         {
                             <tr @key="@("objrow" + objective?.Id)" class="objective done highlightable">
                                 <td class="padded">
-                                    <input @key="@("box" + objective?.Id)" type="checkbox" checked="@objective?.Solved" @onchange=@(async eventArgs => { objective.Solved = (bool)eventArgs.Value; await HandleObjectiveSolvedChanged(objective); }) />
+                                    <input @key="@("box" + objective?.Id)" type="checkbox" checked="@objective?.Solved" @onchange=@(async eventArgs => { objective.Solved = (bool)eventArgs.Value; await HandleObjectiveSolvedChange(objective); }) />
                                 </td>
                                 <td class="padded" width="100%">
                                     <a href="/o/@SelectedOperation.Name/@objective.Name" @key="@("link" + objective?.Id)" class="contentlink">[@objective?.Points] @objective?.Name</a>
                                 </td>
                                 <td class="padded" nowrap>
-                                    <a @key="@("hide" + objective.Id)" class="contentlink" @onclick="@(async () => await ToggleObjectiveVisibility(objective))"><i class="@(objective.Visible ? "fa fa-eye-slash" : "fa fa-eye")"></i></a>
+                                    <a @key="@("hide" + objective.Id)" class="contentlink" @onclick="@(async () => await HandleObjectiveVisibilityChange(objective))"><i class="@(objective.Visible ? "fa fa-eye-slash" : "fa fa-eye")"></i></a>
                                 </td>
                                 <td class="padded" nowrap>
                                     <a href="/o/@SelectedOperation.Name/@objective.Name/files" @key="@("files" + objective.Id)" class="contentlink"><i class="fa fa-folder"></i></a>
@@ -92,7 +92,7 @@
             </table>
             <div class="custom-btn-container">
                 <button type="button" class="btn btn-outline-primary" @onclick="@(async () => CreateObjective = new CreateObjectiveModal(SelectedOperation.Id))">Add</button>
-                <button type="button" class="btn btn-outline-secondary" @onclick="@(() => ToggleHidden())">@(ShowHidden ? "Hide Elements" : "Show Hidden")</button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="@(() => HandleShowHiddenChange())">@(ShowHidden ? "Hide Elements" : "Show Hidden")</button>
             </div>
         </div>
     </div>
@@ -161,7 +161,6 @@
 
     protected override void OnInitialized()
     {
-        Logger.LogWarning("OnInitialized");
         var subTask = SubManager.Subscribe(CancelSource.Token, (id) =>
         {
             if (id == SelectedOperation?.Id)
@@ -178,11 +177,10 @@
 
     protected override void OnParametersSet()
     {
-        Logger.LogWarning($"OnParametersSet {OperationName} {ObjectiveName}");
         ScheduleUpdate();
     }
 
-    void HandleCreateObjective(CreateObjectiveModal modal)
+    void HandleObjectiveCreation(CreateObjectiveModal modal)
     {
         if (modal.Name != null && modal.Name != "" && modal.Category != null && modal.Category != "")
         {
@@ -196,14 +194,14 @@
         }
     }
 
-    async Task HandleObjectiveSolvedChanged(Objective obj)
+    async Task HandleObjectiveSolvedChange(Objective obj)
     {
         using var scope = ScopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
         await db.UpdateObjective(obj.Id, obj.OperationId, obj.Solved, CancelSource.Token);
     }
 
-    async Task ToggleObjectiveVisibility(Objective obj)
+    async Task HandleObjectiveVisibilityChange(Objective obj)
     {
         using var scope = ScopeFactory.CreateScope();
         obj.Visible = !obj.Visible;
@@ -211,7 +209,7 @@
         await db.UpdateObjectiveVisiblity(obj.Id, obj.OperationId, obj.Visible, CancelSource.Token);
     }
 
-    void ToggleHidden()
+    void HandleShowHiddenChange()
     {
         ShowHidden = !ShowHidden;
     }
@@ -236,7 +234,6 @@
 
     void Update(Operation? selectedOperation, Objective? selectedObjective)
     {
-        Logger.LogWarning($"Update({selectedOperation?.Id}, {selectedObjective?.Id})");
         SelectedOperation = selectedOperation;
         SelectedObjective = selectedObjective;
         if (SelectedObjective != null && ActionName == "files")

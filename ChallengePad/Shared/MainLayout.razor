@@ -1,4 +1,26 @@
 ﻿@inherits LayoutComponentBase
+
+@using System.Diagnostics;
+@using System.Threading
+@using Microsoft.Extensions.DependencyInjection
+@using Microsoft.Extensions.Options
+
+@using ChallengePad.Channel
+@using ChallengePad.Models
+@using ChallengePad.Database
+@using ChallengePad.ViewModels
+
+@inject IServiceScopeFactory ScopeFactory
+@inject IOptions<ChallengePadSettings> Settings
+
+<nav id="header">
+    <span class="navbar-brand">@Settings.Value.Title</span>
+    <div class="ml-auto"></div>
+</nav>
 <div id="container">
     @Body
 </div>
+
+@code {
+
+}

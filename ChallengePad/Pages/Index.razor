@@ -11,19 +11,8 @@
 @using Microsoft.Extensions.Options
 @inject IServiceScopeFactory ScopeFactory
 @inject IOptions<ChallengePadSettings> Settings
+@inject SubscriptionManager SubManager
 @implements IDisposable
-
-<nav id="header">
-    <span class="navbar-brand">@Settings.Value.Title</span>
-    <div class="ml-auto"></div>
-    <select @onchange="@HandleOperationSelection">
-        @foreach (var operation in Operations)
-        {
-            <option @key="@("operationlist" + operation.Id)" value="@operation.Id">@operation.Name</option>
-        }
-    </select>
-    <button class="nav-item m-2" @onclick="@(() => CreateOperation = new CreateOperationModal())">Add Operation</button>
-</nav>
 
 @if (CreateOperation != null)
 {
@@ -48,127 +37,11 @@
     </div>
 }
 
-@if (CreateObjective != null)
-{
-    <div class="modal" tabindex="-1" role="dialog" style="display: block">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Create Objective</h5>
-                    <button type="button" class="close" @onclick="@(() => CreateObjective = null)" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <input class="form-control" type="text" placeholder="ScavengePad" @bind="@CreateObjective.Name" />
-                    <input class="form-control" type="text" placeholder="web" @bind="@CreateObjective.Category" />
-                    <input class="form-control" type="number" placeholder="10" @bind="@CreateObjective.Points" />
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="@(() => CreateObjective = null)">Close</button>
-                    <button type="button" class="btn btn-primary" @onclick="@(() => HandleCreateObjective(CreateObjective))">Create</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
+<button class="nav-item m-2" @onclick="@(() => CreateOperation = new CreateOperationModal())">Add Operation</button>
 
-@if (SelectedOperation != null)
+@foreach (var operation in Operations)
 {
-    <div id="card">
-        <div class="card p-2">
-            <div class="highlightable">
-                <a href="" @onclick="@(() => HandleOperationClick())">@SelectedOperation.Name</a>
-            </div>
-            <div class="progress m-2">
-                <div class="progress-bar" role="progressbar" style="width: @((SelectedOperation.SolvedObjectives(ShowHidden)*100.0/SelectedOperation.TotalObjectives(ShowHidden)).ToString(CultureInfo.InvariantCulture))%">@SelectedOperation.SolvedObjectives(ShowHidden) / @SelectedOperation.TotalObjectives(ShowHidden)</div>
-            </div>
-            <div class="progress m-2">
-                <div class="progress-bar" role="progressbar" style="width: @((SelectedOperation.SolvedPoints(ShowHidden)*100.0/SelectedOperation.TotalPoints(ShowHidden)).ToString(CultureInfo.InvariantCulture))%">@SelectedOperation.SolvedPoints(ShowHidden) / @SelectedOperation.TotalPoints(ShowHidden)</div>
-            </div>
-        </div>
-
-        <div class="card mt-4 p-2">
-            <table class="objective-table">
-                @foreach (var category in SelectedOperation.Categories)
-                {
-                    @if (category.Objectives.Where(obj => obj.Visible || ShowHidden).Count() > 0)   // Category not empty due to filter
-                    {
-                        <tr>
-                            <td colspan="5"><strong>@category.Name [<span class="done-count">@category.SolvedObjectives(ShowHidden)</span>/@category.TotalObjectives(ShowHidden)]</strong></td>
-                        </tr>
-                        @foreach (var objective in category.Objectives.Where(obj => obj.Visible || ShowHidden))
-                        {
-                            <tr @key="@("objrow" + objective?.Id)" class="objective done highlightable">
-                                <td class="padded">
-                                    <input @key="@("box" + objective?.Id)" type="checkbox" checked="@objective?.Solved" @onchange=@(async eventArgs => { objective.Solved = (bool)eventArgs.Value; await HandleObjectiveSolvedChanged(objective); }) />
-                                </td>
-                                <td class="padded" width="100%">
-                                    <a href="" @key="@("link" + objective?.Id)" @onclick="@(() => HandleObjectiveClick(objective))" class="contentlink">[@objective?.Points] @objective?.Name</a>
-                                </td>
-                                <td class="padded" nowrap>
-                                    <a href="" @key="@("hide" + objective.Id)" class="contentlink" @onclick="@(async () => await ToggleObjectiveVisibility(objective))"><i class="@(objective.Visible ? "fa fa-eye-slash" : "fa fa-eye")"></i></a>
-                                </td>
-                                <td class="padded" nowrap>
-                                    <a href="" @key="@("files" + objective.Id)" class="contentlink" @onclick="@(() => HandleFileListSelection(objective))"><i class="fa fa-folder"></i></a>
-                                    <sup>@objective.Files.Count</sup>
-                                </td>
-                            </tr>
-                        }
-                    }
-                }
-            </table>
-            <div class="custom-btn-container">
-                <button type="button" class="btn btn-outline-primary" @onclick="@(async () => CreateObjective = new CreateObjectiveModal(SelectedOperation.Id))">Add</button>
-                <button type="button" class="btn btn-outline-secondary" @onclick="@(() => ToggleHidden())">@(ShowHidden ? "Hide Elements": "Show Hidden")</button>
-            </div>
-        </div>
-    </div>
-    <div id="content">
-        @if (SelectedObjective != null && SelectedFileList == null)
-        {
-            <iframe class="card" style="width:100%; height:100%; border:0; border-style:solid;" src="@(Settings.Value.PadPrefix + "PAD_OBJECTIVE" + SelectedObjective.Id + Settings.Value.PadSuffix)" />
-        }
-        else if (SelectedFileList == null)
-        {
-            <iframe class="card" style="width:100%; height:100%; border:0; border-style:solid;" src="@(Settings.Value.PadPrefix + "PAD_OPERATION" + SelectedOperation.Id + Settings.Value.PadSuffix)" />
-        }
-        else
-        {
-            <table class="table table-striped">
-                <tbody>
-                    <tr>
-                        <th>Name</th>
-                        <th>Author</th>
-                        <th>Uploaded</th>
-                    </tr>
-                    @foreach (var file in SelectedFileList)
-                    {
-                        <tr @key="@("filelistitem" + file.Id)">
-                            <td><a href="/api/files?id=@(file.Id)" download target="_blank">@(file.Filename)</a></td>
-                            <td>@file.Username</td>
-                            <td><abbr class="timeago" title="uploaded">@file.Timestamp</abbr></td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-            <iframe name="hidden-iframe" style="display: none;"></iframe>
-            <form id="formId" action="/api/files" enctype="multipart/form-data" method="post" target="hidden-iframe">
-                @if (SelectedObjective != null)
-                {
-                    <input type="hidden" name="id" @bind="@SelectedObjective.Id" />
-                    <input type="hidden" name="isObjectiveFile" value="true" />
-                }
-                else
-                {
-                    <input type="hidden" name="id" @bind="@SelectedOperation.Id" />
-                    <input type="hidden" name="isObjectiveFile" value="false" />
-                }
-                <input type="file" name="files" multiple="multiple" @bind="@Files"><br>
-                <input type="submit" value="Upload" @onclick="foo => { Files = null; }">
-            </form>
-        }
-    </div>
+    <a href="/o/@operation.Name">@operation.Name</a>
 }
 
 @code {
@@ -179,7 +52,6 @@
     List<UploadedFile>? SelectedFileList = null;
     string? Files = null;
     CreateOperationModal? CreateOperation = null;
-    CreateObjectiveModal? CreateObjective = null;
     CancellationTokenSource CancelSource = new CancellationTokenSource();
 
     public void Dispose()
@@ -192,42 +64,10 @@
         using var scope = ScopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
         Operations = await db.GetOperations(0, 100, CancelSource.Token);
-        if (Operations.Length > 0)
+        var subTask = SubManager.Subscribe(CancelSource.Token, (id) =>
         {
-            var operation = await db.GetOperation(Operations[0].Id, CancelSource.Token);
-            ApplyUpdate(operation, true);
-        }
-        var listener = Task.Run(async () =>
-        {
-            var operationIdEnumerable = OperationsChannel.Subscribe(CancelSource.Token, Settings.Value.RedisConfiguration);
-            await foreach (var operationId in operationIdEnumerable)
-            {                                                           // An operation has changed in the backend!
-                var scopedId = operationId;                             // foreach loop counters are by ref, not val
-                await InvokeAsync(async () =>
-                {
-                    using var scope = ScopeFactory.CreateScope();
-                    var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
-                    Operations = await db.GetOperations(0, 100, CancelSource.Token);
-                    var operation = await db.GetOperation(scopedId, CancelSource.Token);
-                    ApplyUpdate(operation, false);
-                    base.StateHasChanged();
-                });
-            }
+            var updateTask = ScheduleUpdate();
         });
-    }
-
-    void HandleCreateObjective(CreateObjectiveModal modal)
-    {
-        if (modal.Name != null && modal.Name != "" && modal.Category != null && modal.Category != "")
-        {
-            CreateObjective = null;
-            Task.Run(async () =>
-            {
-                using var scope = ScopeFactory.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
-                await db.CreateObjective(modal.Name, modal.Category, modal.Points, modal.OperationId, CancelSource.Token);
-            });
-        }
     }
 
     void HandleCreateOperation(CreateOperationModal modal)
@@ -244,66 +84,18 @@
         }
     }
 
-    async Task HandleOperationSelection(ChangeEventArgs args)
+    async Task ScheduleUpdate()
     {
-        var operationId = long.Parse(args.Value.ToString() ?? "");
         using var scope = ScopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
-        var operation = await db.GetOperation(operationId, CancelSource.Token);
-        ApplyUpdate(operation, true);
+        var operations = await db.GetOperations(0, 100, CancellationToken.None);
+        Update(operations);
     }
 
-    void ApplyUpdate(Operation updatedOperation, bool force = false)
+    void Update(Operation[] operations)
     {
-        if (SelectedOperation?.Id == updatedOperation.Id || force)
-        {
-            SelectedOperation = updatedOperation;
-            if (SelectedObjective?.OperationId == SelectedOperation.Id)
-            {
-                SelectedObjective = updatedOperation.Objectives.Where(obj => obj.Id == SelectedObjective.Id).Single();
-            }
-            else
-            {
-                SelectedObjective = null;
-            }
-            if (SelectedFileList != null)
-            {
-                if (SelectedObjective != null)
-                {
-                    SelectedFileList = SelectedObjective.Files;
-                }
-                else
-                {
-                    SelectedFileList = updatedOperation.Files;
-                }
-            }
-        }
+        Operations = operations;
         base.StateHasChanged();
-    }
-
-    void HandleOperationClick()
-    {
-        SelectedObjective = null;
-        SelectedFileList = null;
-    }
-
-    async Task HandleObjectiveSolvedChanged(Objective obj)
-    {
-        using var scope = ScopeFactory.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<IChallengePadDb>();
-        await db.UpdateObjective(obj.Id, obj.OperationId, obj.Solved, CancelSource.Token);
-    }
-
-    void HandleObjectiveClick(Objective obj)
-    {
-        SelectedFileList = null;
-        SelectedObjective = obj;
-    }
-
-    void HandleFileListSelection(Objective obj)
-    {
-        SelectedObjective = obj;
-        SelectedFileList = obj.Files;
     }
 
     async Task ToggleObjectiveVisibility(Objective obj)

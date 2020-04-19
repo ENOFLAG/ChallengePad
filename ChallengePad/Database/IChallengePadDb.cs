@@ -32,6 +32,7 @@ namespace ChallengePad.Database
         Task<Operation[]> GetOperations(int skip, int take, CancellationToken token);
         Task CreateOperation(string name, CancellationToken token);
         Task<Operation> GetOperation(long id, CancellationToken token);
+        Task<Operation> GetOperation(string name, CancellationToken token);
         Task CreateObjective(string name, string category, long points, long operationId, CancellationToken token);
         Task UpdateObjective(long objectiveId, long operationId, bool solved, CancellationToken token);
         Task UpdateObjectiveVisiblity(long objectiveId, long operationId, bool visible, CancellationToken token);

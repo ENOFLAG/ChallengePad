@@ -15,7 +15,7 @@ namespace ChallengePad.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            return Challenge(new AuthenticationProperties() { RedirectUri = "/" });
+            return Challenge(new AuthenticationProperties() { RedirectUri = "/",  }, new string[] { "OAuth" });
         }
     }
 }

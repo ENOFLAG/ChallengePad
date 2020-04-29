@@ -1,0 +1,11 @@
+﻿@inject NavigationManager NavigationManager
+
+<button @onclick="@(() => Test())">Oauth</button>
+
+@code {
+    protected void Test()
+    {
+        var challengeUri = "/LoginPage?provider=OAuth&redirectUri=" + System.Net.WebUtility.UrlEncode(NavigationManager.Uri);
+        NavigationManager.NavigateTo(challengeUri, true);
+    }
+}

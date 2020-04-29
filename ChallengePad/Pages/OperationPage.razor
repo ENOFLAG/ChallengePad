@@ -18,6 +18,7 @@
 @inject SubscriptionManager SubManager
 @inject ILogger<OperationPage> Logger
 @inject NavigationManager NavigationManager
+@attribute [Authorize]
 @implements IDisposable
 
 @if (CreateObjective != null)

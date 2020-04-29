@@ -12,6 +12,7 @@
 @inject IServiceScopeFactory ScopeFactory
 @inject IOptions<ChallengePadSettings> Settings
 @inject SubscriptionManager SubManager
+@attribute [Authorize]
 @implements IDisposable
 
 @if (CreateOperation != null)

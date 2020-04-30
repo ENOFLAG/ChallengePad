@@ -33,6 +33,9 @@ namespace ChallengePad.Database
             modelBuilder.Entity<Operation>()
                 .Ignore(b => b.Categories);
 
+            modelBuilder.Entity<Operation>()
+                .HasIndex(p => p.Name).IsUnique();
+
             modelBuilder.Entity<Objective>()
                 .HasIndex(p => new { p.OperationId, p.Name }).IsUnique();
         }

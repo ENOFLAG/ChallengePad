@@ -12,6 +12,10 @@ namespace ChallengePad
     {
         public async Task OnGet(string redirectUri)
         {
+            if (!Url.IsLocalUrl(redirectUri))
+            {
+                throw new Exception("Non-local redirects are forbidden");
+            }
             await HttpContext.ChallengeAsync("OAuth", new AuthenticationProperties
             {
                 RedirectUri = redirectUri

@@ -11,6 +11,40 @@ app {
     flex-flow: column;
 }
 
+ul.operation-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-flow: row wrap;
+    list-style: none;
+    padding: 0 0 0 0;
+}
+
+.cover {
+    width: 95%;
+    padding: 0 40px 40px 40px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.operation-btn {
+    height: 128px;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    padding: 5px 15px;
+    margin: 10px 0;
+    border: 5px solid grey;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.operation-btn > h5 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0 0 0 0;
+}
 
 #container {
     flex: 1 1 auto;

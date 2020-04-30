@@ -38,12 +38,21 @@
     </div>
 }
 
-<button class="nav-item m-2" @onclick="@(() => CreateOperation = new CreateOperationModal())">Add Operation</button>
-
-@foreach (var operation in Operations)
-{
-    <a href="/o/@operation.Name">@operation.Name</a>
-}
+<div class="cover">
+    <button class="nav-item m-2" @onclick="@(() => CreateOperation = new CreateOperationModal())">Add Operation</button>
+    <ul class="operation-container">
+        @foreach (var operation in Operations)
+        {
+        <li class="col-xs-12 col-sm-6 col-md-6 col-lg-4">
+            <a href="/o/@operation.Name">
+                <div class="operation-btn">
+                    <h5>@operation.Name</h5>
+                </div>
+            </a>
+        </li>
+        }
+    </ul>
+</div>
 
 @code {
     bool ShowHidden = false;

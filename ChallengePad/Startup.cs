@@ -87,6 +87,7 @@ namespace ChallengePad
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddMvc();
+            services.AddSingleton(typeof(SubscriptionManager));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

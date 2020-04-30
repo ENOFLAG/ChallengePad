@@ -76,6 +76,17 @@ namespace ChallengePad.Database
                 .SingleAsync(token);
         }
 
+        public async Task<Operation> GetOperation(string name, CancellationToken token)
+        {
+            Logger.LogDebug($"GetOperation({name})");
+            return await Context.Operations
+                .Where(op => op.Name == name)
+                .Include(op => op.Files)
+                .Include(op => op.Objectives)
+                .ThenInclude(obj => obj.Files)
+                .SingleAsync(token);
+        }
+
         public async Task CreateObjective(string name, string category, long points, long operationId, CancellationToken token)
         {
             Logger.LogDebug($"CreateObjective({name}, {category}, {points}, {operationId})");

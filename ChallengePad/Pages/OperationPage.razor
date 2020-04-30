@@ -62,35 +62,33 @@
         </div>
 
         <div class="card mt-4 p-2">
-            <table class="objective-table">
+            <div class="objective-table">
                 @foreach (var category in SelectedOperation.Categories)
                 {
                     @if (category.Objectives.Where(obj => obj.Visible || ShowHidden).Count() > 0)   // Category not empty due to filter
                     {
-                        <tr>
-                            <td colspan="5"><strong>@category.Name [<span class="done-count">@category.SolvedObjectives(ShowHidden)</span>/@category.TotalObjectives(ShowHidden)]</strong></td>
-                        </tr>
+                        <div class="objective-category">
+                            <strong>@category.Name [<span class="done-count">@category.SolvedObjectives(ShowHidden)</span>/@category.TotalObjectives(ShowHidden)]</strong>
+                        </div>
                         @foreach (var objective in category.Objectives.Where(obj => obj.Visible || ShowHidden))
                         {
-                            <tr @key="@("objrow" + objective?.Id)" class="objective done highlightable">
-                                <td class="padded">
+                            <div @key="@("objrow" + objective?.Id)" class="objective done highlightable">
+                                <div class="solved-checkbox">
                                     <input @key="@("box" + objective?.Id)" type="checkbox" checked="@objective?.Solved" @onchange=@(async eventArgs => { objective.Solved = (bool)eventArgs.Value; await HandleObjectiveSolvedChange(objective); }) />
-                                </td>
-                                <td class="padded" width="100%">
+                                </div>
+                                <div class="objective-name">
                                     <a href="/o/@SelectedOperation.Name/@objective.Name" @key="@("link" + objective?.Id)" class="contentlink">[@objective?.Points] @objective?.Name</a>
-                                </td>
-                                <td class="padded" nowrap>
+                                </div>
+                                <div class="objective-icons">
                                     <a @key="@("hide" + objective.Id)" class="contentlink" @onclick="@(async () => await HandleObjectiveVisibilityChange(objective))"><i class="@(objective.Visible ? "fa fa-eye-slash" : "fa fa-eye")"></i></a>
-                                </td>
-                                <td class="padded" nowrap>
                                     <a href="/o/@SelectedOperation.Name/@objective.Name/files" @key="@("files" + objective.Id)" class="contentlink"><i class="fa fa-folder"></i></a>
                                     <sup>@objective.Files.Count</sup>
-                                </td>
-                            </tr>
+                                </div>
+                            </div>
                         }
                     }
                 }
-            </table>
+            </div>
             <div class="custom-btn-container">
                 <button type="button" class="btn btn-outline-primary" @onclick="@(async () => CreateObjective = new CreateObjectiveModal(SelectedOperation.Id))">Add</button>
                 <button type="button" class="btn btn-outline-secondary" @onclick="@(() => HandleShowHiddenChange())">@(ShowHidden ? "Hide Elements" : "Show Hidden")</button>

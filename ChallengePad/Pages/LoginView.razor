@@ -5,7 +5,9 @@
 @code {
     protected void Test()
     {
-        var challengeUri = "/LoginPage?provider=OAuth&redirectUri=" + System.Net.WebUtility.UrlEncode(NavigationManager.Uri);
+        var uri = new Uri(NavigationManager.Uri)
+            .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+        var challengeUri = "/LoginPage?provider=OAuth&redirectUri=" + System.Net.WebUtility.UrlEncode(uri);
         NavigationManager.NavigateTo(challengeUri, true);
     }
 }

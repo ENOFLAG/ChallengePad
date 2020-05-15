@@ -1,13 +1,31 @@
-﻿@inject NavigationManager NavigationManager
+﻿@using Microsoft.Extensions.Options
 
-<button @onclick="@(() => Test())">Oauth</button>
+@inject NavigationManager NavigationManager
+@inject IOptions<ChallengePadSettings> Settings
+
+<button @onclick="@(() => OauthChallenge())">Oauth</button>
+@if (Settings.Value.GuestPSK != null)
+{
+    <input @bind="GuestPSK" />
+    <button @onclick="(() => GuestPSKChallenge())">Guest Login</button>
+}
 
 @code {
-    protected void Test()
+    private string? GuestPSK { get; set; }
+
+    protected void OauthChallenge()
     {
         var uri = new Uri(NavigationManager.Uri)
             .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
         var challengeUri = "/LoginPage?provider=OAuth&redirectUri=" + System.Net.WebUtility.UrlEncode(uri);
+        NavigationManager.NavigateTo(challengeUri, true);
+    }
+
+    protected void GuestPSKChallenge()
+    {
+        var uri = new Uri(NavigationManager.Uri)
+            .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+        var challengeUri = $"/LoginPage?provider=GuestPSK&guestPSK={GuestPSK}&redirectUri=" + System.Net.WebUtility.UrlEncode(uri);
         NavigationManager.NavigateTo(challengeUri, true);
     }
 }

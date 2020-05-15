@@ -18,5 +18,6 @@ namespace ChallengePad
         public string? OAuthTokenEndpoint { get; set; } = Environment.GetEnvironmentVariable("OAUTH_TOKEN_ENDPOINT");
         public string? OAuthUserInformationEndpoint { get; set; } = Environment.GetEnvironmentVariable("OAUTH_USER_INFORMATION_ENDPOINT");
         public string? OAuthScope { get; set; } = Environment.GetEnvironmentVariable("OAUTH_SCOPE");
+        public string? GuestPSK { get; set; } = Environment.GetEnvironmentVariable("GUEST_PSK");
     }
 }

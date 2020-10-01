@@ -1,0 +1,43 @@
+name: Docker Nightly
+
+on:
+  push:
+    # Publish `master` as Docker `latest` image.
+    branches:
+      - master
+
+env:
+  IMAGE_NAME: challengepad
+
+jobs:
+  # Push image to GitHub Packages.
+  push:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build image
+        run: docker build Challengepad --file ChallengePad/Dockerfile --tag challengepad:nightly
+
+      - name: Log into GitHub Container Registry
+        run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push image to GitHub Container Registry
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+          
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          
+          # Strip git ref prefix from version
+          VERSION=nightly
+          
+          # Strip "v" prefix from tag name
+          VERSION=$(echo $VERSION | sed -e 's/^v//')
+          
+          echo IMAGE_ID=$IMAGE_ID
+          
+          docker tag $IMAGE_NAME $IMAGE_ID:latest
+          docker push $IMAGE_ID

@@ -1,4 +1,4 @@
-# ChallengePad [![Docker](https://img.shields.io/docker/v/enoflag/challengepad?sort=semver)](https://hub.docker.com/r/enoflag/challengepad) [![Build Status](https://dev.azure.com/ENOFLAG/ChallengePad/_apis/build/status/ENOFLAG.ChallengePad?branchName=master)](https://dev.azure.com/ENOFLAG/ChallengePad/_build/) ![](https://tokei.rs/b1/github/ENOFLAG/ChallengePad)
+# ChallengePad [![Docker](https://img.shields.io/docker/v/enoflag/challengepad?sort=semver)](https://hub.docker.com/r/enoflag/challengepad) ![ChallengePad CI](https://github.com/ENOFLAG/ChallengePad/workflows/ChallengePad%20CI/badge.svg) ![](https://tokei.rs/b1/github/ENOFLAG/ChallengePad)
 
 
 ## Installation

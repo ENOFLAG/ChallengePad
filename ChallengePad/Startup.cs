@@ -21,6 +21,11 @@ using Microsoft.Extensions.Hosting;
 
 namespace ChallengePad
 {
+    public class StartupException : Exception
+    {
+        public StartupException(string message) : base(message) { }
+    }
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -38,6 +43,7 @@ namespace ChallengePad
             var challengePadSettings = Configuration
                 .GetSection("ChallengePad")
                 .Get<ChallengePadSettings>();
+            challengePadSettings.ValidateSettings();
 
             services.Configure<ForwardedHeadersOptions>(options =>
             {
@@ -46,14 +52,15 @@ namespace ChallengePad
                 options.KnownProxies.Clear();
             });
             services.AddAuthorization();
-            services.AddAuthentication(options =>
+            var authBuilder = services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = "OAuth";
-            })
-                .AddCookie()
-                .AddOAuth("OAuth", options =>
+            });
+            authBuilder.AddCookie();
+            if (challengePadSettings.HasCompleteOAuthSettings)
+            {
+                authBuilder.AddOAuth("OAuth", options =>
                 {
                     options.ClientId = challengePadSettings.OAuthClientId;
                     options.ClientSecret = challengePadSettings.OAuthClientSecret;
@@ -83,6 +90,8 @@ namespace ChallengePad
                         }
                     };
                 });
+            }
+
             services.AddChallengePadDb(challengePadSettings);
             services.AddRazorPages();
             services.AddServerSideBlazor();

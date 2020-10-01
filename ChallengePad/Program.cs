@@ -17,7 +17,14 @@ namespace ChallengePad
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            try
+            {
+                CreateHostBuilder(args).Build().Run();
+            }
+            catch (StartupException e)
+            {
+                Console.WriteLine($"ChallengePad could not start: {e.Message}");
+            }
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

@@ -1,13 +1,44 @@
-﻿@inject NavigationManager NavigationManager
+﻿@using Microsoft.Extensions.Options
 
-<button @onclick="@(() => Test())">Oauth</button>
+@inject NavigationManager NavigationManager
+@inject IOptions<ChallengePadSettings> Settings
+
+<div class="container">
+    <h1>Login</h1>
+    @if (Settings.Value.HasCompleteOAuthSettings)
+    {
+        <div>
+            <h4>OAuth2</h4>
+            <button @onclick="@(() => OauthChallenge())">Login with OAuth2</button>
+        </div>
+    }
+    @if (Settings.Value.HasGuestPSKSettings)
+    {
+        <div>
+            <h4>Guest Token</h4>
+            <input @bind="GuestPSK" placeholder="Guest Token" />
+            <button @onclick="(() => GuestPSKChallenge())">Guest Login</button>
+        </div>
+    }
+</div>
+
 
 @code {
-    protected void Test()
+    private string? GuestPSK { get; set; }
+
+    protected void OauthChallenge()
     {
         var uri = new Uri(NavigationManager.Uri)
             .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
         var challengeUri = "/LoginPage?provider=OAuth&redirectUri=" + System.Net.WebUtility.UrlEncode(uri);
+        NavigationManager.NavigateTo(challengeUri, true);
+    }
+
+    protected void GuestPSKChallenge()
+    {
+        var uri = new Uri(NavigationManager.Uri)
+            .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+        var challengeUri = $"/LoginPage?provider=GuestPSK&guestPSK={GuestPSK}&redirectUri=" + System.Net.WebUtility.UrlEncode(uri);
         NavigationManager.NavigateTo(challengeUri, true);
     }
 }

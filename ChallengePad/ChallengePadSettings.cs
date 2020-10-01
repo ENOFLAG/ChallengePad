@@ -19,5 +19,33 @@ namespace ChallengePad
         public string? OAuthUserInformationEndpoint { get; set; } = Environment.GetEnvironmentVariable("OAUTH_USER_INFORMATION_ENDPOINT");
         public string? OAuthScope { get; set; } = Environment.GetEnvironmentVariable("OAUTH_SCOPE");
         public string? GuestPSK { get; set; } = Environment.GetEnvironmentVariable("GUEST_PSK");
+
+        public void ValidateSettings()
+        {
+            if (HasOAuthSettings && !HasCompleteOAuthSettings)
+                throw new StartupException("OAuthSettings are incomplete");
+
+            if (HasCompleteOAuthSettings || HasGuestPSKSettings)
+                return;
+
+            throw new StartupException("No authentication scheme defined");
+        }
+
+        public bool HasOAuthSettings =>
+            OAuthClientId != null ||
+            OAuthClientSecret != null ||
+            OAuthAuthorizationEndpoint != null ||
+            OAuthTokenEndpoint != null ||
+            OAuthUserInformationEndpoint != null ||
+            OAuthScope != null;
+
+        public bool HasCompleteOAuthSettings =>
+            OAuthClientSecret != null &&
+            OAuthAuthorizationEndpoint != null &&
+            OAuthTokenEndpoint != null &&
+            OAuthUserInformationEndpoint != null &&
+            OAuthScope != null;
+
+        public bool HasGuestPSKSettings => GuestPSK != null;
     }
 }

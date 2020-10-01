@@ -3,12 +3,25 @@
 @inject NavigationManager NavigationManager
 @inject IOptions<ChallengePadSettings> Settings
 
-<button @onclick="@(() => OauthChallenge())">Oauth</button>
-@if (Settings.Value.GuestPSK != null)
-{
-    <input @bind="GuestPSK" />
-    <button @onclick="(() => GuestPSKChallenge())">Guest Login</button>
-}
+<div class="container">
+    <h1>Login</h1>
+    @if (Settings.Value.HasCompleteOAuthSettings)
+    {
+        <div>
+            <h4>OAuth2</h4>
+            <button @onclick="@(() => OauthChallenge())">Login with OAuth2</button>
+        </div>
+    }
+    @if (Settings.Value.HasGuestPSKSettings)
+    {
+        <div>
+            <h4>Guest Token</h4>
+            <input @bind="GuestPSK" placeholder="Guest Token" />
+            <button @onclick="(() => GuestPSKChallenge())">Guest Login</button>
+        </div>
+    }
+</div>
+
 
 @code {
     private string? GuestPSK { get; set; }

@@ -17,4 +17,3 @@ COPY --from=build /app .
 
 # go!
 ENTRYPOINT ["dotnet", "ChallengePad.dll"]
-#ENTRYPOINT ["sleep", "100000"]
